@@ -26,38 +26,93 @@ public class solving_method
         this.ax = ax;
     }
 
-    public void solvingMethod()
-    {
-        while(hasNull())
-        {
+    public void solvingMethod() {
+        boolean changed;
+        do {
+            changed = false;
             createAuxiliaryLayer();
-            iqCompare();
-        }
+
+            for (int quadrant = 1; quadrant <= 9; quadrant++) {
+                changed |= applySingleCandidate(quadrant);
+                changed |= applySinglePosition(quadrant);
+            }
+        } while (changed);
     }
 
-    public void createAuxiliaryLayer()
-    {
-            for (int qN = 1; qN < 10; qN++) {
-                for (int qNy = 0; qNy < 3; qNy++) {
-                    for (int qNx = 0; qNx < 3; qNx++) {
-                        if (pruefeNull(qN, qNy, qNx)) {
-                            ArrayList<Integer>[][] axLQ = ax.getQn(qN);
+    private void createAuxiliaryLayer() {
+        for (int quadrant = 1; quadrant <= 9; quadrant++) {
+            int[][] grid = s.getQn(quadrant);
+            ArrayList<Integer>[][] auxGrid = ax.getQn(quadrant);
 
-                            axLQ[qNy][qNx] = auxiliaryNumbers(qN, qNy, qNx);
-
-                            if (axLQ[qNy][qNx].size() == 1) {
-                                int[][] opt = s.getQn(qN);
-
-                                opt[qNy][qNx] = axLQ[qNy][qNx].getFirst();
-
-                                s.setQn(opt, qN);
-                                createAuxiliaryLayer();
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (grid[i][j] == 0) {
+                        auxGrid[i][j].clear();
+                        for (int num = 1; num <= 9; num++) {
+                            if (isValid(quadrant, i, j, num)) {
+                                auxGrid[i][j].add(num);
                             }
                         }
+                    } else {
+                        auxGrid[i][j].clear();
                     }
                 }
             }
+        }
     }
+
+    private boolean isValid(int quadrant, int row, int col, int num) {
+        int[][] grid = s.getQn(quadrant);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (grid[i][j] == num) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean applySingleCandidate(int quadrant) {
+        int[][] grid = s.getQn(quadrant);
+        ArrayList<Integer>[][] auxGrid = ax.getQn(quadrant);
+        boolean changed = false;
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (grid[i][j] == 0 && auxGrid[i][j].size() == 1) {
+                    grid[i][j] = auxGrid[i][j].get(0);
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private boolean applySinglePosition(int quadrant) {
+        int[][] grid = s.getQn(quadrant);
+        ArrayList<Integer>[][] auxGrid = ax.getQn(quadrant);
+        boolean changed = false;
+
+        for (int num = 1; num <= 9; num++) {
+            int count = 0, row = -1, col = -1;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (grid[i][j] == 0 && auxGrid[i][j].contains(num)) {
+                        count++;
+                        row = i;
+                        col = j;
+                    }
+                }
+            }
+            if (count == 1) {
+                grid[row][col] = num;
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
 
     public void iqCompare()
     {
